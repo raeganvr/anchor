@@ -1,1 +1,2 @@
 // Supabase table types
+export {}

@@ -1,1 +1,2 @@
 // detectTrigger() pure function
+export {}
