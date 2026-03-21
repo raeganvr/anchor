@@ -1,14 +1,32 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { Home } from "lucide-react";
+import { Send, Anchor } from "lucide-react";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
+import { useBiometrics } from "@/hooks/useBiometrics";
+import { BiometricContext } from "@/types/chat";
+import MessageBubble from "@/components/chat/MessageBubble";
+import { BoxBreathingWidget, SensoryChecklist } from "@/components/chat/GroundingPrompt";
 
 export default function ChatPage() {
+  const bio = useBiometrics();
+  const biometricContext: BiometricContext = {
+    currentHr: bio.currentHr,
+    currentStress: bio.currentStress,
+    baselineHr: bio.baseline.avgRestingHr,
+    baselineStress: bio.baseline.avgStress,
+    triggered: bio.triggerResult.triggered,
+    triggerReason: bio.triggerResult.reason,
+    simulationMode: bio.simulationMode,
+  };
   const { messages, isLoading, sendMessage } = useClaudeChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bio.startMonitoring();
+    return () => bio.stopMonitoring();
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -19,65 +37,90 @@ export default function ChatPage() {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
     setInput("");
-    sendMessage(trimmed);
+    void sendMessage(trimmed, biometricContext);
   };
 
   return (
-    <div className="relative mx-auto flex h-screen max-w-2xl flex-col">
-      <header className="p-4 border-b border-neutral-200 dark:border-neutral-800">
-        <h1 className="text-lg font-semibold">⚓ Anchor</h1>
-        <p className="text-sm text-neutral-500">Grounding Companion</p>
-      </header>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
-          <p className="text-center text-neutral-400 mt-20">
-            Say hi to start a conversation.
-          </p>
-        )}
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2 whitespace-pre-wrap ${
-                msg.role === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-neutral-100 dark:bg-neutral-800 text-foreground"
-              }`}
-            >
-              {msg.content || (isLoading && i === messages.length - 1 ? "…" : "")}
+    <div className="flex min-h-screen flex-col bg-[#F8F7F5]">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="mx-auto max-w-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Anchor size={24} strokeWidth={1.5} className="text-[#1F6B66]" />
+              <div>
+                <h1 className="text-lg font-medium text-[#2C2C2C]">Anchor</h1>
+                <p className="text-sm text-gray-500">Grounding Companion</p>
+              </div>
             </div>
+            {bio.isMonitoring && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    bio.triggerResult.triggered
+                      ? "bg-red-500 animate-pulse"
+                      : bio.simulationMode === "pre_episode"
+                        ? "bg-[#F4A261]"
+                        : "bg-[#4CAF95]"
+                  }`}
+                />
+                {bio.currentHr && <span>{bio.currentHr} bpm</span>}
+              </div>
+            )}
           </div>
-        ))}
-        <div ref={bottomRef} />
+        </div>
       </div>
 
-      <Link
-        href="/"
-        className="fixed bottom-28 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#1F6B66] shadow-md transition-transform hover:bg-[#F8F7F5] active:scale-95"
-        aria-label="Back to home"
-      >
-        <Home size={24} strokeWidth={1.5} />
-      </Link>
+      {/* Trigger banner */}
+      {bio.triggerResult.triggered && (
+        <div className="mx-6 mt-3 rounded-2xl bg-[#F4A261]/10 px-4 py-3 text-center text-sm text-[#C77B3B]">
+          ⚠ Elevated biometrics detected — Anchor is here if you need it.
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="border-t border-neutral-200 p-4 dark:border-neutral-800">
-        <div className="flex gap-2">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="mx-auto max-w-md space-y-4 pb-6">
+          {messages.length === 0 && (
+            <div className="mt-20 text-center">
+              <Anchor size={40} strokeWidth={1} className="mx-auto mb-4 text-gray-300" />
+              <p className="text-lg text-gray-400">Say hi to start a conversation.</p>
+            </div>
+          )}
+          {messages.map((msg, i) => (
+            <div key={i} className="space-y-3">
+              <MessageBubble
+                message={msg}
+                isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
+              />
+              {msg.tools?.map((tool) => {
+                if (tool === "render_box_breathing") return <BoxBreathingWidget key={`${i}-breathing`} />;
+                if (tool === "render_sensory_check") return <SensoryChecklist key={`${i}-sensory`} />;
+                return null;
+              })}
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white px-6 py-4">
+        <div className="mx-auto max-w-md flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-transparent px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
+            className="flex-1 rounded-full bg-gray-100 px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#1F6B66] disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-white font-medium disabled:opacity-50"
+            disabled={isLoading || input.trim().length === 0}
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1F6B66] text-white transition-transform active:scale-95 disabled:opacity-50"
           >
-            Send
+            <Send size={20} />
           </button>
         </div>
       </form>
