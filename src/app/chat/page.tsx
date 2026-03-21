@@ -150,7 +150,7 @@ export default function ChatPage() {
         onSubmit={handleSubmit}
         className="shrink-0 border-t border-gray-200 bg-white px-6 py-3"
       >
-        <div className="mx-auto max-w-md flex items-end gap-3 pb-1.5">
+        <div className="mx-auto max-w-md flex items-end gap-3 pb-2">
           <textarea
             ref={textareaRef}
             rows={1}
