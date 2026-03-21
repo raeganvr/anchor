@@ -41,7 +41,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8F7F5]">
+    <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#F8F7F5]">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
         <div className="mx-auto max-w-md">
@@ -78,8 +78,8 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      {/* Messages — min-h-0 lets this flex child shrink so overflow-y-auto scrolls inside the viewport */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
         <div className="mx-auto max-w-md space-y-4 pb-6">
           {messages.length === 0 && (
             <div className="mt-20 text-center">
@@ -104,8 +104,11 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white px-6 py-4">
+      {/* Input — stays at bottom of viewport; history scrolls above */}
+      <form
+        onSubmit={handleSubmit}
+        className="shrink-0 border-t border-gray-200 bg-white px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      >
         <div className="mx-auto max-w-md flex gap-3">
           <input
             type="text"
