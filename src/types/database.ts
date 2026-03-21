@@ -42,6 +42,7 @@ export interface EpisodeRow {
 export interface SettingsRow {
   id: string
   updated_at: string
+  user_email: string | null
   caregiver_email: string | null
   caregiver_consent: boolean
   caregiver_name: string | null
