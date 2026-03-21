@@ -28,6 +28,10 @@ export async function POST(request: Request) {
 
   const settings = settingsData as SettingsRow
 
+  if (!settings.notifications_enabled) {
+    return NextResponse.json({ results: {}, errors: [] })
+  }
+
   const episode: EpisodeEmailData = {
     episodeId: body.episodeId,
     triggeredAt: body.triggeredAt,

@@ -71,4 +71,5 @@ export interface SettingsRow {
   sensitivity: "low" | "medium" | "high";
   demo_mode: boolean;
   demo_episode_delay_ms: number;
+  notifications_enabled: boolean;
 }

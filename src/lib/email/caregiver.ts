@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Anchor <alerts@aillustrate.dev>'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export interface EpisodeEmailData {
   episodeId: string
@@ -38,6 +39,7 @@ export async function sendCaregiverAlert(
     .metric { background: #f9f9f9; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .metric-label { font-size: 13px; color: #888; }
     .metric-value { font-size: 16px; font-weight: 600; color: #111; }
+    .cta { display: inline-block; background: #111; color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; padding: 12px 28px; border-radius: 8px; margin: 8px 0 24px; }
     .divider { border: none; border-top: 1px solid #eee; margin: 24px 0; }
     .footer { font-size: 12px; color: #aaa; text-align: center; margin-top: 24px; }
   </style>
@@ -65,6 +67,10 @@ export async function sendCaregiverAlert(
     <hr class="divider">
 
     <p>If you're able to, consider reaching out to check in. Even a short message can help ground someone during a difficult moment.</p>
+
+    <a href="${APP_URL}" class="cta">Open Anchor</a>
+
+    <hr class="divider">
 
     <div class="footer">
       Sent by Anchor &mdash; grounding companion &bull; You received this because you were added as a caregiver contact.
@@ -119,6 +125,8 @@ export async function sendUserCheckIn(
     </div>
 
     <p>If you'd like to talk it through, open Anchor and start a chat. Sometimes just putting it into words helps.</p>
+
+    <a href="${APP_URL}/grounding" class="cta">Open Anchor</a>
 
     <hr class="divider">
 
