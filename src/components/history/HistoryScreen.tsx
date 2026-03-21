@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Trash2, FileText } from "lucide-react";
+import { Trash2, FileText } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { useEpisodeLog } from "@/hooks/useEpisodeLog";
 import type { EpisodeRow } from "@/types/database";
@@ -181,17 +181,6 @@ export function HistoryScreen() {
         )
       : null;
 
-  const handleShare = () => {
-    const summary = `Weekly Summary\n\nTotal episodes: ${totalEpisodes}\n${avgDuration != null ? `Average duration: ${avgDuration} min\n` : ""}\nDetails:\n${episodes
-      .map(
-        (ep) =>
-          `${formatDate(ep.created_at)} at ${formatTime(ep.created_at)} — ${formatTrigger(ep.trigger_reason, ep.triggered_by)}${ep.duration_minutes ? `, ${ep.duration_minutes} min` : ""}${ep.resolved ? ", completed" : ", dismissed"}`,
-      )
-      .join("\n")}`;
-
-    window.alert("This would share with your psychiatrist:\n\n" + summary);
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F7F5] pb-24">
       <div className="px-6 pb-6 pt-12">
@@ -227,14 +216,6 @@ export function HistoryScreen() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleShare}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#1F6B66] bg-white px-6 py-4 text-base text-[#1F6B66] transition-transform active:scale-95"
-          >
-            <Share2 size={18} />
-            Share with my psychiatrist
-          </button>
         </div>
       </div>
 
