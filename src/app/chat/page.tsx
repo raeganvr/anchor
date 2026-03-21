@@ -20,6 +20,8 @@ export default function ChatPage() {
     sendMessage(trimmed);
   };
 
+  // Test
+
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto">
       <header className="p-4 border-b border-neutral-200 dark:border-neutral-800">
