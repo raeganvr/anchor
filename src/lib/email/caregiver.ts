@@ -40,8 +40,7 @@ export async function sendCaregiverAlert(
     .metric-label { font-size: 13px; color: #888; }
     .metric-value { font-size: 16px; font-weight: 600; color: #111; }
     .cta { display: inline-block; background: #111; color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; padding: 12px 28px; border-radius: 8px; margin: 8px 0 24px; }
-    .divider { border: none; border-top: 1px solid #eee; margin: 24px 0; }
-    .footer { font-size: 12px; color: #aaa; text-align: center; margin-top: 24px; }
+    .footer { font-size: 12px; color: #aaa; text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee; }
   </style>
 </head>
 <body>
@@ -64,16 +63,12 @@ export async function sendCaregiverAlert(
       <span class="metric-value">${episode.triggerStressValue} / 100</span>
     </div>` : ''}
 
-    <hr class="divider">
-
     <p>If you're able to, consider reaching out to check in. Even a short message can help ground someone during a difficult moment.</p>
 
     <a href="${APP_URL}" class="cta">Open Anchor</a>
 
-    <hr class="divider">
-
     <div class="footer">
-      Sent by Anchor &mdash; grounding companion &bull; You received this because you were added as a caregiver contact.
+      Sent by Anchor - grounding companion. You received this because you were added as a caregiver contact.
     </div>
   </div>
 </body>
@@ -110,15 +105,14 @@ export async function sendUserCheckIn(
     .cta { display: inline-block; background: #111; color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; padding: 12px 28px; border-radius: 8px; margin: 8px 0 24px; }
     .grounding { background: #f9f9f9; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
     .grounding p { margin: 0; font-size: 14px; color: #555; }
-    .divider { border: none; border-top: 1px solid #eee; margin: 24px 0; }
-    .footer { font-size: 12px; color: #aaa; text-align: center; }
+    .footer { font-size: 12px; color: #aaa; text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eee; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="badge">Want to check in?</div>
     <h1>Anchor noticed something at ${time}</h1>
-    <p>Your biometrics showed some elevated readings. It might be nothing &mdash; but if you're feeling off, Anchor is here.</p>
+    <p>Your biometrics showed some elevated readings. It might be nothing, but if you're feeling off, Anchor is here.</p>
 
     <div class="grounding">
       <p><strong>Quick grounding:</strong> Try naming 5 things you can see right now. Take one slow breath. You're okay.</p>
@@ -128,10 +122,8 @@ export async function sendUserCheckIn(
 
     <a href="${APP_URL}/grounding" class="cta">Open Anchor</a>
 
-    <hr class="divider">
-
     <div class="footer">
-      Sent by Anchor &mdash; grounding companion &bull; This was sent because your biometrics exceeded your personal threshold.
+      Sent by Anchor - grounding companion. This was sent because your biometrics exceeded your personal threshold.
     </div>
   </div>
 </body>
