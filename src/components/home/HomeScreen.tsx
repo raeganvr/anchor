@@ -1,12 +1,74 @@
 "use client";
 
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect } from 'react'
 import { Anchor } from "lucide-react";
 import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
-import { getCurrentGarminData } from "@/data/mockData";
+import { useBiometrics } from '@/hooks/useBiometrics'
+import { useBaseline } from '@/hooks/useBaseline'
+import { useEpisodeLog } from '@/hooks/useEpisodeLog'
+import { useSettings } from '@/hooks/useSettings'
+import { pullHeartRateSince, pullStressSince } from '@/lib/biometrics/garmin'
+import type { TriggerResult } from '@/lib/biometrics/simulate'
 
 export function HomeScreen() {
-  const garminData = getCurrentGarminData();
+  const router      = useRouter()
+  const { baseline, loading: baselineLoading }   = useBaseline()
+  const { settings, loading: settingsLoading }   = useSettings()
+  const { logEpisode }                           = useEpisodeLog()
+
+  // ── Handle trigger: pull real window from DB, log episode, navigate ──
+  const handleTrigger = useCallback(async (result: TriggerResult) => {
+    // Pull real data from the DB — this is the Garmin API call equivalent
+    const [hrData, stressData] = await Promise.all([
+      pullHeartRateSince(120),   // last 2 hours
+      pullStressSince(120),
+    ])
+
+    const windowStartMs = hrData[0]?.timestamp ?? Date.now() - 120 * 60_000
+    const windowEndMs   = Date.now()
+
+    await logEpisode({
+      triggered_by:         'biometric',
+      trigger_reason:       result.reason,
+      trigger_hr_value:     result.hrValue,
+      trigger_stress_value: result.stressValue,
+      hr_data:              hrData,
+      stress_data:          stressData,
+      window_start_ms:      windowStartMs,
+      window_end_ms:        windowEndMs,
+    })
+
+    router.push('/alert')
+  }, [logEpisode, router])
+
+  const { currentHr, currentStress, simulationMode, isMonitoring, startMonitoring } = useBiometrics({
+    baseline,
+    sensitivity: settings?.sensitivity ?? 'medium',
+    onTrigger: handleTrigger,
+  })
+
+  // Start monitoring only after BOTH baseline and settings have loaded.
+  // If settings hasn't loaded yet, sensitivity would default to 'medium' and
+  // lock in the wrong trigger thresholds for the session.
+  useEffect(() => {
+    if (!baselineLoading && !settingsLoading && !isMonitoring) {
+      startMonitoring()
+    }
+  }, [baselineLoading, settingsLoading, isMonitoring, startMonitoring])
+
+  // Status label from simulation mode
+  const statusLabel = simulationMode === 'baseline'    ? 'Calm'
+    : simulationMode === 'pre_episode' ? 'Elevated'
+    : simulationMode === 'episode'     ? 'High'
+    : simulationMode === 'recovery'    ? 'Recovering'
+    : 'Calm'
+
+  const statusColor = simulationMode === 'baseline'    ? 'bg-[#4CAF95]'
+    : simulationMode === 'pre_episode' ? 'bg-amber-400'
+    : simulationMode === 'episode'     ? 'bg-red-400'
+    : 'bg-amber-300'
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F7F5]">
@@ -25,21 +87,23 @@ export function HomeScreen() {
                 <div>
                   <div className="mb-2 text-sm text-gray-500">Heart Rate</div>
                   <div className="text-4xl text-[#2C2C2C]">
-                    {garminData.heartRate}
+                    {currentHr ?? (baselineLoading ? '—' : baseline.avgRestingHr)}
                   </div>
                   <div className="mt-1 text-sm text-gray-400">BPM</div>
                 </div>
                 <div>
-                  <div className="mb-2 text-sm text-gray-500">HRV</div>
-                  <div className="text-4xl text-[#2C2C2C]">{garminData.hrv}</div>
-                  <div className="mt-1 text-sm text-gray-400">ms</div>
+                  <div className="mb-2 text-sm text-gray-500">Stress</div>
+                  <div className="text-4xl text-[#2C2C2C]">
+                    {currentStress ?? '—'}
+                  </div>
+                  <div className="mt-1 text-sm text-gray-400">/ 100</div>
                 </div>
               </div>
 
               <div className="border-t border-gray-100 pt-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full bg-[#4CAF95]" />
-                  <div className="text-lg text-[#2C2C2C]">Calm</div>
+                  <div className={`h-3 w-3 rounded-full ${statusColor}`} />
+                  <div className="text-lg text-[#2C2C2C]">{statusLabel}</div>
                 </div>
               </div>
             </div>
