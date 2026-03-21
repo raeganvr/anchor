@@ -72,5 +72,15 @@ export function useEpisodeLog() {
     return { data: data as EpisodeRow | null, error }
   }, [])
 
-  return { episodes, loading, logEpisode, resolveEpisode, updateNotes }
+  const deleteEpisode = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('episodes')
+      .delete()
+      .eq('id', id)
+
+    if (!error) setEpisodes(prev => prev.filter(e => e.id !== id))
+    return { error }
+  }, [])
+
+  return { episodes, loading, logEpisode, resolveEpisode, updateNotes, deleteEpisode }
 }
