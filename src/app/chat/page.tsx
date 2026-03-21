@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Send, Anchor } from "lucide-react";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
 import { useBiometrics } from "@/hooks/useBiometrics";
-import { BiometricContext } from "@/types/chat";
+import { BiometricContext, ToolName } from "@/types/chat";
 import MessageBubble from "@/components/chat/MessageBubble";
 import { BoxBreathingWidget, SensoryChecklist } from "@/components/chat/GroundingPrompt";
+import { TippColdWaterCard } from "@/components/chat/TippColdWaterCard";
+import { WallPushCard } from "@/components/chat/WallPushCard";
+import { ButterflyHugCard } from "@/components/chat/ButterflyHugCard";
+import { CategoryAnchorCard } from "@/components/chat/CategoryAnchorCard";
+
+const TOOL_COMPONENTS: Record<ToolName, React.ComponentType> = {
+  render_box_breathing: BoxBreathingWidget,
+  render_sensory_check: SensoryChecklist,
+  render_tipp_cold_water: TippColdWaterCard,
+  render_wall_push: WallPushCard,
+  render_butterfly_hug: ButterflyHugCard,
+  render_category_anchor: CategoryAnchorCard,
+};
 
 export default function ChatPage() {
   const bio = useBiometrics();
@@ -93,10 +106,9 @@ export default function ChatPage() {
                 message={msg}
                 isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
               />
-              {msg.tools?.map((tool) => {
-                if (tool === "render_box_breathing") return <BoxBreathingWidget key={`${i}-breathing`} />;
-                if (tool === "render_sensory_check") return <SensoryChecklist key={`${i}-sensory`} />;
-                return null;
+              {msg.tools?.map((tool, j) => {
+                const ToolComponent = TOOL_COMPONENTS[tool];
+                return <ToolComponent key={`${tool}-${i}-${j}`} />;
               })}
             </div>
           ))}
