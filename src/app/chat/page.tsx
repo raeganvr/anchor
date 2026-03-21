@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { Home } from "lucide-react";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
 
 export default function ChatPage() {
@@ -20,10 +22,8 @@ export default function ChatPage() {
     sendMessage(trimmed);
   };
 
-  // Test
-
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto">
+    <div className="relative mx-auto flex h-screen max-w-2xl flex-col">
       <header className="p-4 border-b border-neutral-200 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">⚓ Anchor</h1>
         <p className="text-sm text-neutral-500">Grounding Companion</p>
@@ -54,7 +54,15 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-neutral-200 dark:border-neutral-800">
+      <Link
+        href="/"
+        className="fixed bottom-28 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#1F6B66] shadow-md transition-transform hover:bg-[#F8F7F5] active:scale-95"
+        aria-label="Back to home"
+      >
+        <Home size={24} strokeWidth={1.5} />
+      </Link>
+
+      <form onSubmit={handleSubmit} className="border-t border-neutral-200 p-4 dark:border-neutral-800">
         <div className="flex gap-2">
           <input
             type="text"

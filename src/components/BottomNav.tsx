@@ -1,11 +1,12 @@
 "use client";
 
-import { Home, History, Settings } from "lucide-react";
+import { Home, History, MessageCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
+  { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: History, label: "History", path: "/log" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ] as const;
