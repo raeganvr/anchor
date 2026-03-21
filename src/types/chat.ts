@@ -1,4 +1,19 @@
-export type ToolName = "render_box_breathing" | "render_sensory_check";
+export type ToolName =
+  | "render_box_breathing"
+  | "render_sensory_check"
+  | "render_tipp_cold_water"
+  | "render_wall_push"
+  | "render_butterfly_hug"
+  | "render_category_anchor";
+
+export const TOOL_NAMES: ToolName[] = [
+  "render_box_breathing",
+  "render_sensory_check",
+  "render_tipp_cold_water",
+  "render_wall_push",
+  "render_butterfly_hug",
+  "render_category_anchor",
+];
 
 export interface Message {
   role: "user" | "assistant";

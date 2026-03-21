@@ -1,12 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Send, Anchor } from "lucide-react";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
 import { useBiometrics } from "@/hooks/useBiometrics";
-import { BiometricContext } from "@/types/chat";
+import { BiometricContext, ToolName } from "@/types/chat";
 import MessageBubble from "@/components/chat/MessageBubble";
 import { BoxBreathingWidget, SensoryChecklist } from "@/components/chat/GroundingPrompt";
+import { TippColdWaterCard } from "@/components/chat/TippColdWaterCard";
+import { WallPushCard } from "@/components/chat/WallPushCard";
+import { ButterflyHugCard } from "@/components/chat/ButterflyHugCard";
+import { CategoryAnchorCard } from "@/components/chat/CategoryAnchorCard";
+import { BottomNav } from "@/components/BottomNav";
+
+const TOOL_COMPONENTS: Record<ToolName, React.ComponentType> = {
+  render_box_breathing: BoxBreathingWidget,
+  render_sensory_check: SensoryChecklist,
+  render_tipp_cold_water: TippColdWaterCard,
+  render_wall_push: WallPushCard,
+  render_butterfly_hug: ButterflyHugCard,
+  render_category_anchor: CategoryAnchorCard,
+};
 
 export default function ChatPage() {
   const bio = useBiometrics();
@@ -29,19 +43,35 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const lastMessage = messages[messages.length - 1];
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length, lastMessage?.content, lastMessage?.tools?.length]);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeTextarea = () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 150)}px`;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     void sendMessage(trimmed, biometricContext);
+    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8F7F5]">
+    <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#F8F7F5] pb-[88px]">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
         <div className="mx-auto max-w-md">
@@ -78,8 +108,8 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      {/* Messages — min-h-0 lets this flex child shrink so overflow-y-auto scrolls inside the viewport */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6">
         <div className="mx-auto max-w-md space-y-4 pb-6">
           {messages.length === 0 && (
             <div className="mt-20 text-center">
@@ -93,10 +123,9 @@ export default function ChatPage() {
                 message={msg}
                 isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
               />
-              {msg.tools?.map((tool) => {
-                if (tool === "render_box_breathing") return <BoxBreathingWidget key={`${i}-breathing`} />;
-                if (tool === "render_sensory_check") return <SensoryChecklist key={`${i}-sensory`} />;
-                return null;
+              {msg.tools?.map((tool, j) => {
+                const ToolComponent = TOOL_COMPONENTS[tool];
+                return <ToolComponent key={`${tool}-${i}-${j}`} />;
               })}
             </div>
           ))}
@@ -104,16 +133,28 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto max-w-md flex gap-3">
-          <input
-            type="text"
+      <form
+        onSubmit={handleSubmit}
+        className="shrink-0 border-t border-gray-200 bg-white px-6 py-3"
+      >
+        <div className="mx-auto max-w-md flex items-end gap-3">
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              resizeTextarea();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
             placeholder="Type a message..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-gray-100 px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#1F6B66] disabled:opacity-50"
+            className="flex-1 resize-none rounded-3xl bg-gray-100 px-6 py-4 text-lg leading-normal focus:outline-none focus:ring-2 focus:ring-[#1F6B66] disabled:opacity-50"
           />
           <button
             type="submit"
@@ -124,6 +165,8 @@ export default function ChatPage() {
           </button>
         </div>
       </form>
+
+      <BottomNav />
     </div>
   );
 }
