@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { Home } from "lucide-react";
+import { FloatingHomeButton } from "@/components/FloatingHomeButton";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
 
 export default function ChatPage() {
@@ -54,13 +53,7 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      <Link
-        href="/"
-        className="fixed bottom-28 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#1F6B66] shadow-md transition-transform hover:bg-[#F8F7F5] active:scale-95"
-        aria-label="Back to home"
-      >
-        <Home size={24} strokeWidth={1.5} />
-      </Link>
+      <FloatingHomeButton />
 
       <form onSubmit={handleSubmit} className="border-t border-neutral-200 p-4 dark:border-neutral-800">
         <div className="flex gap-2">

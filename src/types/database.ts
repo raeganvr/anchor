@@ -15,7 +15,7 @@ export interface BaselineRow {
   hrv_status: string | null
   established: boolean
   sample_days: number
-  recent_days: any[]
+  recent_days: unknown[]
 }
 
 export interface EpisodeRow {
@@ -26,15 +26,15 @@ export interface EpisodeRow {
   duration_minutes: number | null
   resolved: boolean
   resolved_at: string | null
-  hr_data: any[]
-  stress_data: any[]
-  hrv_data: any[]
+  hr_data: unknown[]
+  stress_data: unknown[]
+  hrv_data: unknown[]
   trigger_hr_value: number | null
   trigger_stress_value: number | null
   trigger_reason: string | null
   window_start_ms: number | null
   window_end_ms: number | null
-  chat_transcript: any[]
+  chat_transcript: unknown[]
   caregiver_alerted: boolean
   caregiver_alerted_at: string | null
 }

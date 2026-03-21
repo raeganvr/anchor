@@ -1,3 +1,4 @@
+export { FloatingHomeButton } from "./FloatingHomeButton";
 export { BottomNav } from "./BottomNav";
 export { HomeScreen } from "./home/HomeScreen";
 export { AlertScreen } from "./alert/AlertScreen";

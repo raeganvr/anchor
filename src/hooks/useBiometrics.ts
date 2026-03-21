@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   HRReading, StressReading, Baseline, TriggerResult,
-  REAL_BASELINE, TRIGGER_CONFIG,
+  REAL_BASELINE,
   getNextLiveReading, detectTrigger, scheduleDemoEpisode,
 } from '@/lib/biometrics/simulate'
 

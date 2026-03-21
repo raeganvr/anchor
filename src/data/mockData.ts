@@ -11,6 +11,8 @@ export interface Episode {
   duration: number;
   triggerType: "automatic" | "manual";
   engaged: boolean;
+  /** Optional user notes for manual entries */
+  notes?: string;
 }
 
 export const getCurrentGarminData = (): GarminData => {

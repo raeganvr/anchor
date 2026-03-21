@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { Home, Send } from "lucide-react";
+import { FloatingHomeButton } from "@/components/FloatingHomeButton";
+import { Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Message {
@@ -152,13 +152,7 @@ export function GroundingScreen() {
         </div>
       </div>
 
-      <Link
-        href="/"
-        className="fixed bottom-48 left-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-[#1F6B66] shadow-md transition-transform hover:bg-[#F8F7F5] active:scale-95"
-        aria-label="Back to home"
-      >
-        <Home size={24} strokeWidth={1.5} />
-      </Link>
+      <FloatingHomeButton bottomClassName="bottom-48" />
 
       <div className="border-t border-gray-200 bg-white px-6 py-4">
         <div className="mx-auto max-w-md space-y-4">

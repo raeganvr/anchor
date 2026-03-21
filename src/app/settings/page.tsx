@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, startTransition } from 'react'
+import { FloatingHomeButton } from '@/components/FloatingHomeButton'
 import { useSettings } from '@/hooks/useSettings'
 
 export default function SettingsPage() {
@@ -16,11 +17,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!settings) return
-    setUserEmail(settings.user_email ?? '')
-    setCaregiverConsent(settings.caregiver_consent)
-    setCaregiverName(settings.caregiver_name ?? '')
-    setCaregiverEmail(settings.caregiver_email ?? '')
-    setSensitivity(settings.sensitivity)
+    startTransition(() => {
+      setUserEmail(settings.user_email ?? '')
+      setCaregiverConsent(settings.caregiver_consent)
+      setCaregiverName(settings.caregiver_name ?? '')
+      setCaregiverEmail(settings.caregiver_email ?? '')
+      setSensitivity(settings.sensitivity)
+    })
   }, [settings])
 
   async function handleSave(e: React.FormEvent) {
@@ -40,15 +43,17 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-950">
-        <div className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-700 animate-spin" />
+      <div className="relative flex min-h-screen items-center justify-center bg-zinc-50 pb-28 dark:bg-zinc-950">
+        <FloatingHomeButton />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-12 px-4">
-      <div className="max-w-lg mx-auto">
+    <div className="relative min-h-screen bg-zinc-50 pb-28 pt-12 dark:bg-zinc-950 px-4">
+      <FloatingHomeButton />
+      <div className="mx-auto max-w-lg">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Settings</h1>
           <p className="text-sm text-zinc-500 mt-1">Configure notifications and monitoring sensitivity.</p>
@@ -127,7 +132,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <p className="text-xs text-zinc-400">
-                  When an episode is detected, they'll receive an email asking them to check in with you.
+                  When an episode is detected, they will receive an email asking them to check in with you.
                 </p>
               </div>
             )}
