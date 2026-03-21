@@ -45,11 +45,21 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeTextarea = () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 150)}px`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     void sendMessage(trimmed, biometricContext);
   };
 
@@ -116,19 +126,28 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input — stays at bottom of viewport; history scrolls above */}
       <form
         onSubmit={handleSubmit}
         className="shrink-0 border-t border-gray-200 bg-white px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <div className="mx-auto max-w-md flex gap-3">
-          <input
-            type="text"
+        <div className="mx-auto max-w-md flex items-end gap-3">
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              resizeTextarea();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
             placeholder="Type a message..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-gray-100 px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#1F6B66] disabled:opacity-50"
+            className="flex-1 resize-none rounded-3xl bg-gray-100 px-6 py-4 text-lg leading-normal focus:outline-none focus:ring-2 focus:ring-[#1F6B66] disabled:opacity-50"
           />
           <button
             type="submit"

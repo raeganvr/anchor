@@ -19,13 +19,13 @@ export default function MessageBubble({ message, isStreaming }: MessageBubblePro
       className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`max-w-[80%] rounded-3xl px-6 py-4 ${
+        className={`max-w-[80%] min-w-0 rounded-3xl px-6 py-4 ${
           isUser
             ? "bg-[#1F6B66] text-white"
             : "bg-white text-[#2C2C2C] shadow-sm"
         }`}
       >
-        <p className="text-lg leading-relaxed whitespace-pre-wrap">
+        <p className="text-lg leading-relaxed whitespace-pre-wrap break-words" style={{ overflowWrap: "anywhere" }}>
           {message.content || (isStreaming ? "…" : "")}
         </p>
       </div>
