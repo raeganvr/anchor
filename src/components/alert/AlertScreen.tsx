@@ -61,7 +61,7 @@ export function AlertScreen() {
             onClick={handleYes}
             className="block w-full rounded-full bg-white px-8 py-6 text-xl text-[#1F6B66] shadow-lg transition-transform active:scale-95"
           >
-            Yes, help me
+            Yes
           </button>
           <button
             type="button"
