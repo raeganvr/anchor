@@ -50,7 +50,7 @@ export function HomeScreen() {
           </div>
 
           <Link
-            href="/grounding"
+            href="/chat"
             className="block w-full rounded-full bg-[#1F6B66] px-8 py-6 text-center text-xl text-white shadow-md transition-transform active:scale-95"
           >
             I need grounding
