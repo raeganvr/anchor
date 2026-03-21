@@ -57,6 +57,7 @@ export interface EpisodeRow {
   chat_transcript: Message[]; // was: any[]
   caregiver_alerted: boolean;
   caregiver_alerted_at: string | null;
+  notes: string | null;
 }
 
 export interface SettingsRow {

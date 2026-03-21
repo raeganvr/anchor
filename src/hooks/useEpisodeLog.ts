@@ -60,5 +60,17 @@ export function useEpisodeLog() {
     if (data) setEpisodes(prev => prev.map(e => e.id === id ? data as EpisodeRow : e))
   }, [])
 
-  return { episodes, loading, logEpisode, resolveEpisode }
+  const updateNotes = useCallback(async (id: string, notes: string) => {
+    const { data, error } = await supabase
+      .from('episodes')
+      .update({ notes })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (data) setEpisodes(prev => prev.map(e => e.id === id ? data as EpisodeRow : e))
+    return { data: data as EpisodeRow | null, error }
+  }, [])
+
+  return { episodes, loading, logEpisode, resolveEpisode, updateNotes }
 }
