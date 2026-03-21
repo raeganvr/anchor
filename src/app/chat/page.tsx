@@ -26,6 +26,7 @@ export default function ChatPage() {
   useEffect(() => {
     bio.startMonitoring();
     return () => bio.stopMonitoring();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start/stop on mount/unmount only
   }, []);
 
   useEffect(() => {

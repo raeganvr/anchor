@@ -91,8 +91,9 @@ export function useBaseline() {
     await pruneOldReadings();
   }, [baseline, rowId]);
 
-  // Keep the ref current so the interval always calls the latest version
-  refreshBaselineRef.current = refreshBaseline;
+  useEffect(() => {
+    refreshBaselineRef.current = refreshBaseline;
+  }, [refreshBaseline]);
 
   // ── Auto-refresh every 6 hours ──────────────────────────────────
   // Empty dep array: interval is created once and never restarted.

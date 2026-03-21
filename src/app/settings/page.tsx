@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { useSettings } from '@/hooks/useSettings'
 
 export default function SettingsPage() {
@@ -17,12 +17,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!settings) return
-    setUserEmail(settings.user_email ?? '')
-    setCaregiverConsent(settings.caregiver_consent)
-    setCaregiverName(settings.caregiver_name ?? '')
-    setCaregiverEmail(settings.caregiver_email ?? '')
-    setSensitivity(settings.sensitivity)
-    setNotificationsEnabled(settings.notifications_enabled)
+    startTransition(() => {
+      setUserEmail(settings.user_email ?? '')
+      setCaregiverConsent(settings.caregiver_consent)
+      setCaregiverName(settings.caregiver_name ?? '')
+      setCaregiverEmail(settings.caregiver_email ?? '')
+      setSensitivity(settings.sensitivity)
+      setNotificationsEnabled(settings.notifications_enabled)
+    })
   }, [settings])
 
   async function handleSave(e: React.FormEvent) {
@@ -157,7 +159,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <p className="text-xs text-zinc-400">
-                  When an episode is detected, they'll receive an email asking them to check in with you.
+                  When an episode is detected, they will receive an email asking them to check in with you.
                 </p>
               </div>
             )}
