@@ -345,6 +345,60 @@ export function detectTrigger(
   };
 }
 
+// ── RETROSPECTIVE TRIGGER INFERENCE ──────────────────────────────
+// Used when a user manually logs a past episode. Unlike detectTrigger()
+// which watches a live feed for the first threshold crossing, this scans
+// an entire historical window and finds the worst sustained segment —
+// matching the same logic but applied in hindsight.
+export function inferEpisodeReason(
+  hrData: HRReading[],
+  stressData: StressReading[],
+  baseline: Baseline = REAL_BASELINE,
+  config: typeof TRIGGER_CONFIG = TRIGGER_CONFIG,
+): TriggerResult {
+  if (hrData.length === 0 && stressData.length === 0) {
+    return { triggered: false }
+  }
+
+  // Find the highest sustained average over a rolling window of N readings
+  const N = config.sustainedReadings
+  let peakAvgHr = 0
+
+  if (hrData.length >= N) {
+    for (let i = 0; i <= hrData.length - N; i++) {
+      const slice = hrData.slice(i, i + N)
+      const avg = slice.reduce((s, r) => s + r.bpm, 0) / N
+      if (avg > peakAvgHr) peakAvgHr = avg
+    }
+  } else if (hrData.length > 0) {
+    // Fewer readings than the window — use what's there
+    peakAvgHr = hrData.reduce((s, r) => s + r.bpm, 0) / hrData.length
+  }
+
+  const avgStress =
+    stressData.length > 0
+      ? stressData.reduce((s, r) => s + r.stressLevel, 0) / stressData.length
+      : 0
+  const peakStress =
+    stressData.length > 0 ? Math.max(...stressData.map((r) => r.stressLevel)) : 0
+
+  // Mirror detectTrigger() priority order
+  if (peakAvgHr >= config.hrAbsoluteThreshold) {
+    return { triggered: true, reason: 'hr_spike', hrValue: Math.round(peakAvgHr), stressValue: Math.round(avgStress) }
+  }
+  if (peakAvgHr >= baseline.avgRestingHr * config.hrMultiplierThreshold) {
+    return { triggered: true, reason: 'hr_spike', hrValue: Math.round(peakAvgHr), stressValue: Math.round(avgStress) }
+  }
+  if (peakAvgHr >= config.combinedHrThreshold && avgStress >= config.combinedStressThreshold) {
+    return { triggered: true, reason: 'combined_hr_stress', hrValue: Math.round(peakAvgHr), stressValue: Math.round(avgStress) }
+  }
+  if (peakStress >= config.stressThreshold) {
+    return { triggered: true, reason: 'stress_only', hrValue: Math.round(peakAvgHr), stressValue: Math.round(peakStress) }
+  }
+
+  return { triggered: false, hrValue: Math.round(peakAvgHr), stressValue: Math.round(avgStress) }
+}
+
 // ── BASELINE CALCULATOR ──────────────────────────────────────────
 // Updates rolling baseline from new day's data
 // In production, fed from real Garmin API pulls

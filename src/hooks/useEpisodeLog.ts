@@ -38,6 +38,8 @@ export function useEpisodeLog() {
     window_start_ms?: number
     window_end_ms?: number
     chat_transcript?: Message[]
+    notes?: string
+    created_at?: string
   }) => {
     const { data, error } = await supabase
       .from('episodes')
@@ -72,5 +74,15 @@ export function useEpisodeLog() {
     return { data: data as EpisodeRow | null, error }
   }, [])
 
-  return { episodes, loading, logEpisode, resolveEpisode, updateNotes }
+  const deleteEpisode = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('episodes')
+      .delete()
+      .eq('id', id)
+
+    if (!error) setEpisodes(prev => prev.filter(e => e.id !== id))
+    return { error }
+  }, [])
+
+  return { episodes, loading, logEpisode, resolveEpisode, updateNotes, deleteEpisode }
 }
