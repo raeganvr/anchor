@@ -38,6 +38,8 @@ export function useEpisodeLog() {
     window_start_ms?: number
     window_end_ms?: number
     chat_transcript?: Message[]
+    notes?: string
+    created_at?: string
   }) => {
     const { data, error } = await supabase
       .from('episodes')

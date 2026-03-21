@@ -109,6 +109,48 @@ export async function getDailySummary(
   };
 }
 
+// ── pullBiometricsInWindow ─────────────────────────────────────────────────
+// Garmin equivalent: GET /wellness-api/rest/heartRate + stressDetails with date range
+// Used when a user manually logs a past episode — fetches whatever was recorded
+// in that specific time window rather than counting back from now.
+export async function pullBiometricsInWindow(
+  startIso: string,
+  endIso: string,
+): Promise<{ hr: HRReading[]; stress: StressReading[] }> {
+  const [hrResult, stressResult] = await Promise.all([
+    supabase
+      .from("biometric_readings")
+      .select("recorded_at, hr_bpm")
+      .gte("recorded_at", startIso)
+      .lte("recorded_at", endIso)
+      .not("hr_bpm", "is", null)
+      .order("recorded_at", { ascending: true }),
+    supabase
+      .from("biometric_readings")
+      .select("recorded_at, stress_level")
+      .gte("recorded_at", startIso)
+      .lte("recorded_at", endIso)
+      .not("stress_level", "is", null)
+      .order("recorded_at", { ascending: true }),
+  ])
+
+  const hr = (hrResult.data ?? [])
+    .filter((r) => r.hr_bpm !== null)
+    .map((r) => ({
+      timestamp: new Date(r.recorded_at).getTime(),
+      bpm: r.hr_bpm as number,
+    }))
+
+  const stress = (stressResult.data ?? [])
+    .filter((r) => r.stress_level !== null)
+    .map((r) => ({
+      timestamp: new Date(r.recorded_at).getTime(),
+      stressLevel: r.stress_level as number,
+    }))
+
+  return { hr, stress }
+}
+
 // ── pruneOldReadings ───────────────────────────────────────────────────────
 // Deletes readings older than 48 hours.
 // Call this once per day (or from baseline refresh) to keep the table small.
