@@ -11,6 +11,7 @@ import { TippColdWaterCard } from "@/components/chat/TippColdWaterCard";
 import { WallPushCard } from "@/components/chat/WallPushCard";
 import { ButterflyHugCard } from "@/components/chat/ButterflyHugCard";
 import { CategoryAnchorCard } from "@/components/chat/CategoryAnchorCard";
+import { BottomNav } from "@/components/BottomNav";
 
 const TOOL_COMPONENTS: Record<ToolName, React.ComponentType> = {
   render_box_breathing: BoxBreathingWidget,
@@ -42,8 +43,13 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const lastMessage = messages[messages.length - 1];
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length, lastMessage?.content, lastMessage?.tools?.length]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -61,10 +67,11 @@ export default function ChatPage() {
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     void sendMessage(trimmed, biometricContext);
+    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
   return (
-    <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#F8F7F5]">
+    <div className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#F8F7F5] pb-[88px]">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4">
         <div className="mx-auto max-w-md">
@@ -128,7 +135,7 @@ export default function ChatPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="shrink-0 border-t border-gray-200 bg-white px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="shrink-0 border-t border-gray-200 bg-white px-6 py-3"
       >
         <div className="mx-auto max-w-md flex items-end gap-3">
           <textarea
@@ -158,6 +165,8 @@ export default function ChatPage() {
           </button>
         </div>
       </form>
+
+      <BottomNav />
     </div>
   );
 }

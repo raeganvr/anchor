@@ -113,6 +113,7 @@ export function WallPushCard() {
                 strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 56}
+                initial={{ strokeDashoffset: 2 * Math.PI * 56 }}
                 animate={{
                   strokeDashoffset: 2 * Math.PI * 56 * (1 - progress),
                 }}
