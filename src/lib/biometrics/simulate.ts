@@ -287,41 +287,62 @@ export interface TriggerResult {
 export function detectTrigger(
   recentHr: HRReading[],
   recentStress: StressReading[],
-  baseline: Baseline = REAL_BASELINE
+  baseline: Baseline = REAL_BASELINE,
+  config: typeof TRIGGER_CONFIG = TRIGGER_CONFIG, // optional override for sensitivity
 ): TriggerResult {
-  const N = TRIGGER_CONFIG.sustainedReadings
+  const N = config.sustainedReadings;
 
   if (recentHr.length < N) {
-    return { triggered: false }
+    return { triggered: false };
   }
 
-  const lastNHr = recentHr.slice(-N)
-  const avgRecentHr = lastNHr.reduce((s, r) => s + r.bpm, 0) / N
+  const lastNHr = recentHr.slice(-N);
+  const avgRecentHr = lastNHr.reduce((s, r) => s + r.bpm, 0) / N;
 
-  const lastNStress = recentStress.slice(-N)
-  const avgRecentStress = lastNStress.length > 0
-    ? lastNStress.reduce((s, r) => s + r.stressLevel, 0) / lastNStress.length
-    : 0
+  const lastNStress = recentStress.slice(-N);
+  const avgRecentStress =
+    lastNStress.length > 0
+      ? lastNStress.reduce((s, r) => s + r.stressLevel, 0) / lastNStress.length
+      : 0;
 
   // Trigger 1: pure HR spike (absolute threshold)
-  if (avgRecentHr >= TRIGGER_CONFIG.hrAbsoluteThreshold) {
-    return { triggered: true, reason: 'hr_spike', hrValue: avgRecentHr, stressValue: avgRecentStress }
+  if (avgRecentHr >= config.hrAbsoluteThreshold) {
+    return {
+      triggered: true,
+      reason: "hr_spike",
+      hrValue: avgRecentHr,
+      stressValue: avgRecentStress,
+    };
   }
 
   // Trigger 2: HR ratio (adapted for low-baseline athletes like Raegan)
-  if (avgRecentHr >= baseline.avgRestingHr * TRIGGER_CONFIG.hrMultiplierThreshold) {
-    return { triggered: true, reason: 'hr_spike', hrValue: avgRecentHr, stressValue: avgRecentStress }
+  if (avgRecentHr >= baseline.avgRestingHr * config.hrMultiplierThreshold) {
+    return {
+      triggered: true,
+      reason: "hr_spike",
+      hrValue: avgRecentHr,
+      stressValue: avgRecentStress,
+    };
   }
 
   // Trigger 3: combined moderate HR + elevated stress
   if (
-    avgRecentHr >= TRIGGER_CONFIG.combinedHrThreshold &&
-    avgRecentStress >= TRIGGER_CONFIG.combinedStressThreshold
+    avgRecentHr >= config.combinedHrThreshold &&
+    avgRecentStress >= config.combinedStressThreshold
   ) {
-    return { triggered: true, reason: 'combined_hr_stress', hrValue: avgRecentHr, stressValue: avgRecentStress }
+    return {
+      triggered: true,
+      reason: "combined_hr_stress",
+      hrValue: avgRecentHr,
+      stressValue: avgRecentStress,
+    };
   }
 
-  return { triggered: false, hrValue: avgRecentHr, stressValue: avgRecentStress }
+  return {
+    triggered: false,
+    hrValue: avgRecentHr,
+    stressValue: avgRecentStress,
+  };
 }
 
 // ── BASELINE CALCULATOR ──────────────────────────────────────────
