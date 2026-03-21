@@ -1,2 +1,5 @@
-// Caregiver setup + sensitivity
-export default function SettingsPage() { return null }
+import { SettingsScreen } from "@/components/settings/SettingsScreen";
+
+export default function SettingsPage() {
+  return <SettingsScreen />;
+}
