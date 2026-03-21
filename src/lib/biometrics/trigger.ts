@@ -1,0 +1,1 @@
+// detectTrigger() pure function
