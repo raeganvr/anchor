@@ -18,7 +18,7 @@ export function HomeScreen() {
   const { settings, loading: settingsLoading }   = useSettings()
   const { logEpisode }                           = useEpisodeLog()
 
-  // ── Handle trigger: pull real window from DB, log episode, navigate ──
+  // ── Handle trigger: pull real window from DB, log episode, send email, navigate ──
   const handleTrigger = useCallback(async (result: TriggerResult) => {
     // Pull real data from the DB — this is the Garmin API call equivalent
     const [hrData, stressData] = await Promise.all([
@@ -28,8 +28,9 @@ export function HomeScreen() {
 
     const windowStartMs = hrData[0]?.timestamp ?? Date.now() - 120 * 60_000
     const windowEndMs   = Date.now()
+    const triggeredAt   = new Date().toISOString()
 
-    await logEpisode({
+    const { data: episode } = await logEpisode({
       triggered_by:         'biometric',
       trigger_reason:       result.reason,
       trigger_hr_value:     result.hrValue,
@@ -40,8 +41,23 @@ export function HomeScreen() {
       window_end_ms:        windowEndMs,
     })
 
+    // Fire email notification if enabled (fire-and-forget)
+    if (settings?.notifications_enabled && episode) {
+      fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          episodeId:          episode.id,
+          triggeredAt,
+          triggerReason:      result.reason ?? null,
+          triggerHrValue:     result.hrValue ?? null,
+          triggerStressValue: result.stressValue ?? null,
+        }),
+      }).catch(() => {/* non-blocking */})
+    }
+
     router.push('/alert')
-  }, [logEpisode, router])
+  }, [logEpisode, router, settings])
 
   const { currentHr, currentStress, simulationMode, isMonitoring, startMonitoring } = useBiometrics({
     baseline,

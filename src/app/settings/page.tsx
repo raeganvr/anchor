@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [caregiverName, setCaregiverName] = useState('')
   const [caregiverEmail, setCaregiverEmail] = useState('')
   const [sensitivity, setSensitivity] = useState<'low' | 'medium' | 'high'>('medium')
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -21,6 +22,7 @@ export default function SettingsPage() {
     setCaregiverName(settings.caregiver_name ?? '')
     setCaregiverEmail(settings.caregiver_email ?? '')
     setSensitivity(settings.sensitivity)
+    setNotificationsEnabled(settings.notifications_enabled)
   }, [settings])
 
   async function handleSave(e: React.FormEvent) {
@@ -32,6 +34,7 @@ export default function SettingsPage() {
       caregiver_name: caregiverName || null,
       caregiver_email: caregiverEmail || null,
       sensitivity,
+      notifications_enabled: notificationsEnabled,
     })
     setSaving(false)
     setSaved(true)
@@ -58,22 +61,49 @@ export default function SettingsPage() {
 
           {/* Your email */}
           <section className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
-            <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide mb-4">
-              Your notifications
-            </h2>
-            <label className="block">
-              <span className="text-sm text-zinc-600 dark:text-zinc-400 mb-1.5 block">Your email</span>
-              <input
-                type="email"
-                value={userEmail}
-                onChange={e => setUserEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
-              />
-            </label>
-            <p className="mt-2 text-xs text-zinc-400">
-              When your thresholds are exceeded, Anchor sends you a gentle check-in email.
-            </p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">
+                  Your notifications
+                </h2>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Send a check-in email when an episode is detected.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={notificationsEnabled}
+                onClick={() => setNotificationsEnabled(v => !v)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 ${
+                  notificationsEnabled ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${
+                    notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {notificationsEnabled && (
+              <div className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <label className="block">
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400 mb-1.5 block">Your email</span>
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={e => setUserEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                  />
+                </label>
+                <p className="text-xs text-zinc-400">
+                  When your thresholds are exceeded, Anchor sends you a gentle check-in email.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Caregiver alerts */}
