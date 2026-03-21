@@ -55,6 +55,15 @@ export function HomeScreen() {
           >
             I need grounding
           </Link>
+
+          <p className="text-center">
+            <Link
+              href="/alert"
+              className="text-sm text-gray-500 underline decoration-gray-400 underline-offset-2 hover:text-[#1F6B66]"
+            >
+              Preview elevated heart rate alert
+            </Link>
+          </p>
         </div>
       </div>
 
