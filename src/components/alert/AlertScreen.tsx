@@ -44,7 +44,7 @@ export function AlertScreen() {
           transition={{ delay: 0.4 }}
         >
           <Link
-            href="/grounding"
+            href="/chat"
             className="block w-full rounded-full bg-white px-8 py-6 text-xl text-[#1F6B66] shadow-lg transition-transform active:scale-95"
           >
             Yes, help me
