@@ -1,2 +1,5 @@
-// Episode history + insights chart
-export default function LogPage() { return null }
+import { HistoryScreen } from "@/components/history/HistoryScreen";
+
+export default function LogPage() {
+  return <HistoryScreen />;
+}
