@@ -6,7 +6,10 @@ import { useClaudeChat } from "@/hooks/useClaudeChat";
 import { useBiometrics } from "@/hooks/useBiometrics";
 import { BiometricContext, ToolName } from "@/types/chat";
 import MessageBubble from "@/components/chat/MessageBubble";
-import { BoxBreathingWidget, SensoryChecklist } from "@/components/chat/GroundingPrompt";
+import {
+  BoxBreathingWidget,
+  SensoryChecklist,
+} from "@/components/chat/GroundingPrompt";
 import { TippColdWaterCard } from "@/components/chat/TippColdWaterCard";
 import { WallPushCard } from "@/components/chat/WallPushCard";
 import { ButterflyHugCard } from "@/components/chat/ButterflyHugCard";
@@ -113,15 +116,25 @@ export default function ChatPage() {
         <div className="mx-auto max-w-md space-y-4 pb-6">
           {messages.length === 0 && (
             <div className="mt-20 text-center">
-              <Anchor size={40} strokeWidth={1} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-lg text-gray-400">Say hi to start a conversation.</p>
+              <Anchor
+                size={40}
+                strokeWidth={1}
+                className="mx-auto mb-4 text-gray-300"
+              />
+              <p className="text-lg text-gray-400">
+                Say hi to start a conversation.
+              </p>
             </div>
           )}
           {messages.map((msg, i) => (
             <div key={i} className="space-y-3">
               <MessageBubble
                 message={msg}
-                isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
+                isStreaming={
+                  isLoading &&
+                  i === messages.length - 1 &&
+                  msg.role === "assistant"
+                }
               />
               {msg.tools?.map((tool, j) => {
                 const ToolComponent = TOOL_COMPONENTS[tool];
@@ -137,7 +150,7 @@ export default function ChatPage() {
         onSubmit={handleSubmit}
         className="shrink-0 border-t border-gray-200 bg-white px-6 py-3"
       >
-        <div className="mx-auto max-w-md flex items-end gap-3">
+        <div className="mx-auto max-w-md flex items-end gap-3 pb-1.5">
           <textarea
             ref={textareaRef}
             rows={1}

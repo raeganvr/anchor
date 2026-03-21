@@ -13,7 +13,7 @@ export function useEpisodeLog() {
   const [episodes, setEpisodes] = useState<EpisodeRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchEpisodes = useCallback(() => {
     supabase
       .from('episodes')
       .select('*')
@@ -24,6 +24,12 @@ export function useEpisodeLog() {
         setLoading(false)
       })
   }, [])
+
+  useEffect(() => {
+    fetchEpisodes()
+    window.addEventListener('anchor:episode-logged', fetchEpisodes)
+    return () => window.removeEventListener('anchor:episode-logged', fetchEpisodes)
+  }, [fetchEpisodes])
 
   const logEpisode = useCallback(async (episode: {
     triggered_by: 'biometric' | 'manual' | 'caregiver'
@@ -47,7 +53,10 @@ export function useEpisodeLog() {
       .select()
       .single()
 
-    if (data) setEpisodes(prev => [data as EpisodeRow, ...prev])
+    if (data) {
+      setEpisodes(prev => [data as EpisodeRow, ...prev])
+      window.dispatchEvent(new Event('anchor:episode-logged'))
+    }
     return { data: data as EpisodeRow | null, error }
   }, [])
 
