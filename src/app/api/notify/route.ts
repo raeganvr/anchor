@@ -1,26 +1,33 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createAuthServer } from '@/lib/supabase/auth-server'
+import { supabaseServer } from '@/lib/supabase/server'
 import { sendCaregiverAlert, sendUserCheckIn, EpisodeEmailData } from '@/lib/email/caregiver'
 import type { SettingsRow } from '@/types/database'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: Request) {
+  const supabase = await createAuthServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const body = await request.json() as {
-    episodeId: string
+    episodeId?: string
     triggeredAt: string
     triggerReason: string | null
     triggerHrValue: number | null
     triggerStressValue: number | null
   }
 
-  const { data: settingsData, error: settingsError } = await supabaseAdmin
+  const { data: settingsData, error: settingsError } = await supabaseServer
     .from('settings')
     .select('*')
-    .single()
+    .eq('user_id', user.id)
+    .limit(1)
+    .maybeSingle()
 
   if (settingsError || !settingsData) {
     return NextResponse.json({ error: 'Failed to load settings' }, { status: 500 })
@@ -33,7 +40,7 @@ export async function POST(request: Request) {
   }
 
   const episode: EpisodeEmailData = {
-    episodeId: body.episodeId,
+    episodeId: body.episodeId ?? '',
     triggeredAt: body.triggeredAt,
     triggerReason: body.triggerReason,
     triggerHrValue: body.triggerHrValue,
@@ -66,10 +73,13 @@ export async function POST(request: Request) {
       results.caregiver = settings.caregiver_email
 
       // Mark episode as caregiver_alerted
-      await supabaseAdmin
+      if (body.episodeId) {
+        await supabaseServer
         .from('episodes')
         .update({ caregiver_alerted: true, caregiver_alerted_at: new Date().toISOString() })
         .eq('id', body.episodeId)
+        .eq('user_id', user.id)
+      }
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { ensureUserRows } from "@/lib/supabase/user-data";
 import { Anchor } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,6 +41,14 @@ export default function SignupPage() {
       setError(authError.message);
       setLoading(false);
       return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      await ensureUserRows(user);
     }
 
     setSuccess(true);
