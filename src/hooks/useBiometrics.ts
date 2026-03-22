@@ -15,7 +15,7 @@ import {
   TRIGGER_CONFIG,
   getNextLiveReading,
   detectTrigger,
-  scheduleDemoEpisode,
+  resetLiveState,
 } from "@/lib/biometrics/simulate";
 import { supabase } from "@/lib/supabase/client";
 import { getCurrentUser } from "@/lib/supabase/user-data";
@@ -91,7 +91,7 @@ export function useBiometrics({
   const triggerConfig = SENSITIVITY_CONFIG[sensitivity];
 
   const startMonitoring = useCallback(() => {
-    scheduleDemoEpisode(90_000);
+    resetLiveState()
     setState((s) => ({ ...s, isMonitoring: true }));
     triggeredRef.current = false;
 

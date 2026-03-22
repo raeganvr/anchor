@@ -9,6 +9,7 @@ import { useBiometrics } from '@/hooks/useBiometrics'
 import { useBaseline } from '@/hooks/useBaseline'
 import { useSettings } from '@/hooks/useSettings'
 import { pullHeartRateSince, pullStressSince } from '@/lib/biometrics/garmin'
+import { scheduleDemoEpisode } from '@/lib/biometrics/simulate'
 import type { TriggerResult } from '@/lib/biometrics/simulate'
 
 export function HomeScreen() {
@@ -38,7 +39,11 @@ export function HomeScreen() {
           triggerHrValue:     result.hrValue ?? null,
           triggerStressValue: result.stressValue ?? null,
         }),
-      }).catch(() => {})
+      })
+        .then(r => r.json().then(d => console.log('[notify]', r.status, d)))
+        .catch(e => console.error('[notify] fetch failed', e))
+    } else {
+      console.log('[notify] skipped — notifications_enabled:', settings?.notifications_enabled)
     }
 
     // Stash biometric data — AlertScreen writes to DB only if user taps "Yes"
@@ -61,6 +66,15 @@ export function HomeScreen() {
     sensitivity: settings?.sensitivity ?? 'medium',
     onTrigger: handleTrigger,
   })
+
+  // Shift+D → trigger demo episode in 5 seconds
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'y') scheduleDemoEpisode(5_000)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   // Start monitoring only after BOTH baseline and settings have loaded.
   // If settings hasn't loaded yet, sensitivity would default to 'medium' and
