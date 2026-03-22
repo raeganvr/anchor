@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { Send, Anchor } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
@@ -27,6 +27,14 @@ const TOOL_COMPONENTS: Record<ToolName, React.ComponentType> = {
 };
 
 export default function ChatPage() {
+  return (
+    <Suspense>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
   const searchParams = useSearchParams();
   const bio = useBiometrics();
   const biometricContext: BiometricContext = {
@@ -42,6 +50,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const groundingSent = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bio.startMonitoring();
@@ -63,8 +72,6 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, lastMessage?.content, lastMessage?.tools?.length]);
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const resizeTextarea = () => {
     const ta = textareaRef.current;
