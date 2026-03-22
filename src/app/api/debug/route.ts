@@ -2,14 +2,24 @@
 // Dev-only GET endpoint — dumps all three Supabase tables and one simulated biometric reading.
 // Hit GET /api/debug in the browser to verify Supabase connectivity and simulation output.
 // Remove or gate behind an env check before deploying to production.
+import { createAuthServer } from '@/lib/supabase/auth-server'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getNextLiveReading, detectTrigger, REAL_BASELINE } from '@/lib/biometrics/simulate'
 
 export async function GET() {
+  const supabase = await createAuthServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const [baseline, episodes, settings] = await Promise.all([
-    supabaseServer.from('baseline').select('*').single(),
-    supabaseServer.from('episodes').select('*').order('created_at', { ascending: false }).limit(5),
-    supabaseServer.from('settings').select('*').single(),
+    supabaseServer.from('baseline').select('*').eq('user_id', user.id).limit(1).maybeSingle(),
+    supabaseServer.from('episodes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+    supabaseServer.from('settings').select('*').eq('user_id', user.id).limit(1).maybeSingle(),
   ])
 
   // Snapshot one simulated reading + trigger check

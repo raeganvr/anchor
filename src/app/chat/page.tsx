@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Anchor } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useClaudeChat } from "@/hooks/useClaudeChat";
 import { useBiometrics } from "@/hooks/useBiometrics";
 import { BiometricContext, ToolName } from "@/types/chat";
@@ -26,6 +27,7 @@ const TOOL_COMPONENTS: Record<ToolName, React.ComponentType> = {
 };
 
 export default function ChatPage() {
+  const searchParams = useSearchParams();
   const bio = useBiometrics();
   const biometricContext: BiometricContext = {
     currentHr: bio.currentHr,
@@ -39,11 +41,19 @@ export default function ChatPage() {
   const { messages, isLoading, sendMessage } = useClaudeChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const groundingSent = useRef(false);
 
   useEffect(() => {
     bio.startMonitoring();
     return () => bio.stopMonitoring();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("grounding") === "true" && !groundingSent.current) {
+      groundingSent.current = true;
+      void sendMessage("I need grounding", biometricContext);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     textareaRef.current?.focus();

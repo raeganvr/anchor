@@ -5,6 +5,7 @@
 // chat_transcript (Message[]) is written here by the chat team after a session ends.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { getCurrentUser } from '@/lib/supabase/user-data'
 import type { EpisodeRow } from '@/types/database'
 import type { HRReading, StressReading, HRVReading } from '@/lib/biometrics/simulate'
 import type { Message } from '@/types/chat'
@@ -14,15 +15,27 @@ export function useEpisodeLog() {
   const [loading, setLoading] = useState(true)
 
   const fetchEpisodes = useCallback(() => {
-    supabase
-      .from('episodes')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20)
-      .then(({ data }) => {
-        if (data) setEpisodes(data as EpisodeRow[])
+    async function run() {
+      const user = await getCurrentUser()
+
+      if (!user) {
+        setEpisodes([])
         setLoading(false)
-      })
+        return
+      }
+
+      const { data } = await supabase
+        .from('episodes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (data) setEpisodes(data as EpisodeRow[])
+      setLoading(false)
+    }
+
+    void run()
   }, [])
 
   useEffect(() => {
@@ -47,9 +60,18 @@ export function useEpisodeLog() {
     notes?: string
     created_at?: string
   }) => {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return { data: null, error: new Error('user not loaded') }
+    }
+
     const { data, error } = await supabase
       .from('episodes')
-      .insert(episode)
+      .insert({
+        ...episode,
+        user_id: user.id,
+      })
       .select()
       .single()
 
@@ -61,10 +83,15 @@ export function useEpisodeLog() {
   }, [])
 
   const resolveEpisode = useCallback(async (id: string) => {
+    const user = await getCurrentUser()
+
+    if (!user) return
+
     const { data } = await supabase
       .from('episodes')
       .update({ resolved: true, resolved_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -72,10 +99,17 @@ export function useEpisodeLog() {
   }, [])
 
   const updateNotes = useCallback(async (id: string, notes: string) => {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return { data: null, error: new Error('user not loaded') }
+    }
+
     const { data, error } = await supabase
       .from('episodes')
       .update({ notes })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -84,10 +118,17 @@ export function useEpisodeLog() {
   }, [])
 
   const deleteEpisode = useCallback(async (id: string) => {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return { error: new Error('user not loaded') }
+    }
+
     const { error } = await supabase
       .from('episodes')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (!error) setEpisodes(prev => prev.filter(e => e.id !== id))
     return { error }
