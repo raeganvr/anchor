@@ -14,7 +14,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,30 +50,9 @@ export default function SignupPage() {
       await ensureUserRows(user);
     }
 
-    setSuccess(true);
-    setLoading(false);
+    router.push("/");
+    router.refresh();
   };
-
-  if (success) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F8F7F5] px-6">
-        <div className="w-full max-w-sm text-center">
-          <Anchor size={40} strokeWidth={1.5} className="mx-auto mb-4 text-[#1F6B66]" />
-          <h1 className="mb-2 text-2xl font-medium text-[#2C2C2C]">Check your email</h1>
-          <p className="mb-8 text-gray-500">
-            We sent a confirmation link to <strong className="text-[#2C2C2C]">{email}</strong>.
-            Click it to activate your account.
-          </p>
-          <Link
-            href="/login"
-            className="inline-block rounded-full bg-[#1F6B66] px-8 py-4 text-lg font-medium text-white shadow-md transition-transform active:scale-[0.98]"
-          >
-            Back to sign in
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F8F7F5] px-6">
