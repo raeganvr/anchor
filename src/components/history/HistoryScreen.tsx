@@ -215,7 +215,6 @@ export function HistoryScreen() {
               )}
             </div>
           </div>
-
         </div>
       </div>
 

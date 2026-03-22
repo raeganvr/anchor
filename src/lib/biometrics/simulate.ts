@@ -238,6 +238,12 @@ export function scheduleDemoEpisode(delayMs: number = 90_000): void {
   }
 }
 
+export function resetLiveState(): void {
+  _liveState = { mode: 'baseline' }
+  _lastHr = 68
+  _lastStress = 25
+}
+
 export function getNextLiveReading(baseline: Baseline = REAL_BASELINE): {
   hr: HRReading
   stress: StressReading
@@ -260,16 +266,35 @@ export function getNextLiveReading(baseline: Baseline = REAL_BASELINE): {
     }
   }
 
-  // Generate single reading
-  const [hrWindow] = generateHRWindow(now, 2, _liveState.mode, baseline)
-  const [stressWindow] = generateStressWindow(now, 3, _liveState.mode, baseline)
+  // Generate single reading directly by mode — avoids progress=0 bug
+  // in generateHRWindow when called with a short window (1 reading only)
+  let hrBpm: number
+  let stressLevel: number
 
-  _lastHr = hrWindow?.bpm ?? _lastHr
-  _lastStress = stressWindow?.stressLevel ?? _lastStress
+  switch (_liveState.mode) {
+    case 'pre_episode':
+      hrBpm = baseline.avgDaytimeHr + 15 + noise(5)   // gradual rise, ~83
+      stressLevel = baseline.avgStress + 20 + noise(8) // climbing stress
+      break
+    case 'episode':
+      hrBpm = baseline.avgDaytimeHr + 35 + noise(7)   // peak ~103, well above 95 threshold
+      stressLevel = 65 + noise(12)                     // high stress
+      break
+    case 'recovery':
+      hrBpm = baseline.avgRestingHr + (baseline.avgDaytimeHr - baseline.avgRestingHr) * 0.4 + noise(4)
+      stressLevel = baseline.avgStress + 15 + noise(6)
+      break
+    default: // baseline
+      hrBpm = baseline.avgDaytimeHr + noise(8)
+      stressLevel = baseline.avgStress + noise(8)
+  }
+
+  _lastHr = Math.round(clamp(hrBpm, 38, 160))
+  _lastStress = Math.round(clamp(stressLevel, 1, 99))
 
   return {
-    hr: hrWindow ?? { timestamp: now, bpm: _lastHr },
-    stress: stressWindow ?? { timestamp: now, stressLevel: _lastStress },
+    hr: { timestamp: now, bpm: _lastHr },
+    stress: { timestamp: now, stressLevel: _lastStress },
     mode: _liveState.mode,
   }
 }
