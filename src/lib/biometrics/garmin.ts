@@ -5,6 +5,7 @@
 // Future: replace DB queries with real Garmin Connect OAuth API calls
 
 import { supabase } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/supabase/user-data";
 import type { BiometricReadingRow, DailySummary } from "@/types/database";
 import type { HRReading, StressReading } from "@/lib/biometrics/simulate";
 
@@ -15,11 +16,16 @@ import type { HRReading, StressReading } from "@/lib/biometrics/simulate";
 export async function pullHeartRateSince(
   windowMinutes: number,
 ): Promise<HRReading[]> {
+  const user = await getCurrentUser();
+
+  if (!user) return [];
+
   const since = new Date(Date.now() - windowMinutes * 60_000).toISOString();
 
   const { data, error } = await supabase
     .from("biometric_readings")
     .select("recorded_at, hr_bpm")
+    .eq("user_id", user.id)
     .gte("recorded_at", since)
     .not("hr_bpm", "is", null)
     .order("recorded_at", { ascending: true });
@@ -40,11 +46,16 @@ export async function pullHeartRateSince(
 export async function pullStressSince(
   windowMinutes: number,
 ): Promise<StressReading[]> {
+  const user = await getCurrentUser();
+
+  if (!user) return [];
+
   const since = new Date(Date.now() - windowMinutes * 60_000).toISOString();
 
   const { data, error } = await supabase
     .from("biometric_readings")
     .select("recorded_at, stress_level")
+    .eq("user_id", user.id)
     .gte("recorded_at", since)
     .not("stress_level", "is", null)
     .order("recorded_at", { ascending: true });
@@ -66,6 +77,10 @@ export async function pullStressSince(
 export async function getDailySummary(
   date: string,
 ): Promise<DailySummary | null> {
+  const user = await getCurrentUser();
+
+  if (!user) return null;
+
   // date format: 'YYYY-MM-DD'
   const dayStart = new Date(date + "T00:00:00Z").toISOString();
   const dayEnd = new Date(date + "T23:59:59Z").toISOString();
@@ -73,6 +88,7 @@ export async function getDailySummary(
   const { data, error } = await supabase
     .from("biometric_readings")
     .select("hr_bpm, stress_level, hrv_rmssd")
+    .eq("user_id", user.id)
     .gte("recorded_at", dayStart)
     .lte("recorded_at", dayEnd);
 
@@ -117,10 +133,17 @@ export async function pullBiometricsInWindow(
   startIso: string,
   endIso: string,
 ): Promise<{ hr: HRReading[]; stress: StressReading[] }> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return { hr: [], stress: [] };
+  }
+
   const [hrResult, stressResult] = await Promise.all([
     supabase
       .from("biometric_readings")
       .select("recorded_at, hr_bpm")
+      .eq("user_id", user.id)
       .gte("recorded_at", startIso)
       .lte("recorded_at", endIso)
       .not("hr_bpm", "is", null)
@@ -128,6 +151,7 @@ export async function pullBiometricsInWindow(
     supabase
       .from("biometric_readings")
       .select("recorded_at, stress_level")
+      .eq("user_id", user.id)
       .gte("recorded_at", startIso)
       .lte("recorded_at", endIso)
       .not("stress_level", "is", null)
@@ -156,6 +180,14 @@ export async function pullBiometricsInWindow(
 // Call this once per day (or from baseline refresh) to keep the table small.
 // Garmin equivalent: their API handles retention; we handle it ourselves.
 export async function pruneOldReadings(): Promise<void> {
+  const user = await getCurrentUser();
+
+  if (!user) return;
+
   const cutoff = new Date(Date.now() - 48 * 60 * 60_000).toISOString();
-  await supabase.from("biometric_readings").delete().lt("recorded_at", cutoff);
+  await supabase
+    .from("biometric_readings")
+    .delete()
+    .eq("user_id", user.id)
+    .lt("recorded_at", cutoff);
 }

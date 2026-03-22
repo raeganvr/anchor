@@ -5,6 +5,7 @@
 // The settings row drives demo_episode_delay_ms and alert_threshold_min at runtime.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { getCurrentUserWithRows } from '@/lib/supabase/user-data'
 import type { SettingsRow } from '@/types/database'
 
 export function useSettings() {
@@ -12,14 +13,34 @@ export function useSettings() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('settings')
-      .select('*')
-      .single()
-      .then(({ data }) => {
+    let cancelled = false
+
+    async function loadSettings() {
+      const user = await getCurrentUserWithRows()
+
+      if (!user) {
+        if (!cancelled) setLoading(false)
+        return
+      }
+
+      const { data } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (!cancelled) {
         if (data) setSettings(data as SettingsRow)
         setLoading(false)
-      })
+      }
+    }
+
+    void loadSettings()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const updateSettings = useCallback(async (patch: Partial<Omit<SettingsRow, 'id' | 'updated_at'>>) => {
@@ -29,6 +50,7 @@ export function useSettings() {
       .from('settings')
       .update(patch)
       .eq('id', settings.id)
+      .eq('user_id', settings.user_id)
       .select()
       .single()
 

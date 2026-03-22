@@ -8,6 +8,7 @@ import type { Message } from "@/types/chat";
 
 export interface BiometricReadingRow {
   id: string;
+  user_id: string;
   recorded_at: string; // ISO timestamptz
   source: "simulated" | "garmin" | "strava";
   hr_bpm: number | null;
@@ -18,6 +19,7 @@ export interface BiometricReadingRow {
 
 export interface BaselineRow {
   id: string;
+  user_id: string;
   updated_at: string;
   avg_resting_hr: number;
   avg_daytime_hr: number;
@@ -40,6 +42,7 @@ export interface DailySummary {
 
 export interface EpisodeRow {
   id: string;
+  user_id: string;
   created_at: string;
   user_label: string | null;
   triggered_by: "biometric" | "manual" | "caregiver";
@@ -62,6 +65,7 @@ export interface EpisodeRow {
 
 export interface SettingsRow {
   id: string;
+  user_id: string;
   updated_at: string;
   user_email: string | null;
   caregiver_email: string | null;

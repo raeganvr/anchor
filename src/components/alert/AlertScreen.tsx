@@ -16,7 +16,7 @@ export function AlertScreen() {
       await logEpisode(JSON.parse(raw));
       localStorage.removeItem(PENDING_KEY);
     }
-    router.push("/chat");
+    router.push("/chat?grounding=true");
   };
 
   const handleNo = () => {

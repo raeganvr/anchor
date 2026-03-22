@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { getCurrentUserWithRows } from "@/lib/supabase/user-data";
 import { REAL_BASELINE, updateBaseline } from "@/lib/biometrics/simulate";
 import { getDailySummary, pruneOldReadings } from "@/lib/biometrics/garmin";
 import type { Baseline } from "@/lib/biometrics/simulate";
@@ -30,6 +31,7 @@ export function useBaseline() {
   const [baseline, setBaseline] = useState<Baseline>(REAL_BASELINE);
   const [loading, setLoading] = useState(true);
   const [rowId, setRowId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable ref to the latest refresh function — avoids restarting the interval
@@ -39,17 +41,38 @@ export function useBaseline() {
 
   // ── Load from Supabase on mount ──────────────────────────────────
   useEffect(() => {
-    supabase
-      .from("baseline")
-      .select("*")
-      .single()
-      .then(({ data }) => {
+    let cancelled = false;
+
+    async function loadBaseline() {
+      const user = await getCurrentUserWithRows();
+
+      if (!user) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("baseline")
+        .select("*")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!cancelled) {
         if (data) {
           setBaseline(rowToBaseline(data as BaselineRow));
           setRowId((data as BaselineRow).id);
         }
+        setUserId(user.id);
         setLoading(false);
-      });
+      }
+    }
+
+    void loadBaseline();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ── Refresh: aggregate today's readings, update DB ──────────────
@@ -84,12 +107,13 @@ export function useBaseline() {
           sample_days: updated.sampleDays,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", rowId);
+        .eq("id", rowId)
+        .eq("user_id", userId);
     }
 
     // Keep the readings table small while we're here
     await pruneOldReadings();
-  }, [baseline, rowId]);
+  }, [baseline, rowId, userId]);
 
   // Keep the ref current so the interval always calls the latest version
   refreshBaselineRef.current = refreshBaseline;

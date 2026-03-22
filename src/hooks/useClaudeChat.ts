@@ -106,11 +106,13 @@ export function useClaudeChat() {
 
     dispatch({ type: "appendUser", message: userMessage });
 
+    const apiMessages = updatedMessages.map(({ role, content: c }) => ({ role, content: c }));
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, biometrics }),
+        body: JSON.stringify({ messages: apiMessages, biometrics }),
       });
 
       if (!response.ok) {

@@ -18,6 +18,7 @@ import {
   resetLiveState,
 } from "@/lib/biometrics/simulate";
 import { supabase } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/supabase/user-data";
 import type { SettingsRow } from "@/types/database";
 
 const POLL_INTERVAL_MS = 2000; // 2s demo; each poll = one Garmin reading at simulated speed
@@ -86,6 +87,7 @@ export function useBiometrics({
   const hrBufferRef = useRef<HRReading[]>([]);
   const stressBufferRef = useRef<StressReading[]>([]);
   const triggeredRef = useRef(false); // prevent firing onTrigger repeatedly
+  const userIdRef = useRef<string | null>(null);
   const triggerConfig = SENSITIVITY_CONFIG[sensitivity];
 
   const startMonitoring = useCallback(() => {
@@ -93,22 +95,29 @@ export function useBiometrics({
     setState((s) => ({ ...s, isMonitoring: true }));
     triggeredRef.current = false;
 
+    void getCurrentUser().then((user) => {
+      userIdRef.current = user?.id ?? null;
+    });
+
     intervalRef.current = setInterval(() => {
       const { hr, stress, mode } = getNextLiveReading(baseline);
 
       // ── Write to DB (fire-and-forget, non-blocking) ──────────────
       // This is the equivalent of Garmin pushing a reading to Garmin Connect.
       // We don't await — a dropped insert is acceptable; monitoring continues.
-      supabase
-        .from("biometric_readings")
-        .insert({
-          recorded_at: new Date(hr.timestamp).toISOString(),
-          source: "simulated",
-          hr_bpm: hr.bpm,
-          stress_level: stress.stressLevel,
-          hrv_rmssd: null, // HRV is sleep-only; written separately if ever implemented
-        })
-        .then(); // intentionally not awaited
+      if (userIdRef.current) {
+        supabase
+          .from("biometric_readings")
+          .insert({
+            user_id: userIdRef.current,
+            recorded_at: new Date(hr.timestamp).toISOString(),
+            source: "simulated",
+            hr_bpm: hr.bpm,
+            stress_level: stress.stressLevel,
+            hrv_rmssd: null, // HRV is sleep-only; written separately if ever implemented
+          })
+          .then(); // intentionally not awaited
+      }
 
       // ── Update in-memory buffer for trigger detection ─────────────
       hrBufferRef.current = [...hrBufferRef.current, hr].slice(-WINDOW_SIZE);
@@ -143,6 +152,7 @@ export function useBiometrics({
 
   const stopMonitoring = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    userIdRef.current = null;
     setState((s) => ({ ...s, isMonitoring: false }));
   }, []);
 
