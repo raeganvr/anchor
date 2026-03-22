@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Anchor <alerts@aillustrate.dev>'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://aillustrate.dev'
 
 export interface EpisodeEmailData {
   episodeId: string
@@ -65,7 +65,7 @@ export async function sendCaregiverAlert(
 
     <p>If you're able to, consider reaching out to check in. Even a short message can help ground someone during a difficult moment.</p>
 
-    <a href="${APP_URL}" class="cta">Open Anchor</a>
+    <a href="${APP_URL}/chat" class="cta">Open Anchor</a>
 
     <div class="footer">
       Sent by Anchor - grounding companion. You received this because you were added as a caregiver contact.
@@ -120,7 +120,7 @@ export async function sendUserCheckIn(
 
     <p>If you'd like to talk it through, open Anchor and start a chat. Sometimes just putting it into words helps.</p>
 
-    <a href="${APP_URL}/grounding" class="cta">Open Anchor</a>
+    <a href="${APP_URL}/chat" class="cta">Open Anchor</a>
 
     <div class="footer">
       Sent by Anchor - grounding companion. This was sent because your biometrics exceeded your personal threshold.
